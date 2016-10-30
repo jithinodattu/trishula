@@ -1,5 +1,5 @@
 
-from thrishula.abstracts import Layer
+from trishula.abstracts import Layer
 
 class DenseLayer(Layer):
 
