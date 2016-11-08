@@ -1,17 +1,18 @@
 
-from tensorflow import tf 
+import tensorflow as tf
 from trishula.abstracts import Layer
+from trishula.utils.weight_initializer import gloret
 
 class DenseLayer(Layer):
 
-	def __init__(self, size, w_initializer=None, activ_fn=None):
+	def __init__(self, shape, w_initializer=gloret, activ_fn=None):
 		if w_initializer:
 			W_value, b_value = w_initializer(size=size, activ_fn=activ_fn)
 		else:
 			W_value, b_value = tf.zeros(size), tf.zeros([size[1]])
 
-		self.W = tf.Variable(W_value)
-		self.b = tf.Variable(b_value)
+		self.W = gloret('W', shape)
+		self.b = gloret('b', shape[-1])
 
 		self.activ_fn = activ_fn
 
