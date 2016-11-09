@@ -1,34 +1,57 @@
 
 import tensorflow as tf
 from trishula.abstracts import Model
-from trishula.abstracts import Layer 
+from trishula.abstracts import Layer
 
 class Sequential(Model):
 
-	def __init__(self, name):
-		self.name = name
+	def __init__(self):
 		self.layers = []
 
 	def add(self, layer):
-		assert issubclass(type(layer), Layer), 
-			+ "This layer is not a subclass of trishula.abstracts.Layer"
-		layers.add(layer)
+		assert issubclass(type(layer) , Layer), "This layer is not a subclass of trishula.abstracts.Layer"
+		self.layers.append(layer)
 
-	def optimize(self, input_dim, output_dim):
-		X = tf.placeholder(tf.float32, shape=input_dim)
-		y_ = tf.placeholder(tf.float32, shape=output_dim)
-		y = tf.matmul(x,self.layers[0].W) + self.layers[0].b
+	def _connect_layers(self):
+		assert len(self.layers) != 0, "There is no layer in the model"
+		layer_input = self.X
+		for layer in self.layers:
+			layer_output = layer.feedforward(layer_input)
+			layer_input = layer_output
+		self.y = layer_output
 
-		sess = tf.InteractiveSession()
-		sess.run(tf.initialize_all_variables())
-		train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
-		correct_prediction = tf.equal(tf.argmax(y,1), tf.argmax(y_,1))
+	def optimize(self, 
+		dataset, 
+		error,
+		learning_rate=0.50, 
+		n_epochs=1000, 
+		batch_size=50):
+
+		self.X = tf.placeholder(tf.float32, shape=[None, 784], name='X')
+		self.y_ = tf.placeholder(tf.float32, shape=[None, 10], name='y_')
+
+		self._connect_layers()
+
+		error = error(self.y, self.y_)
+
+		train_step = tf.train.AdamOptimizer(1e-4).minimize(error)
+
+		session = tf.InteractiveSession()
+		tf.initialize_all_variables().run()
+
+		correct_prediction = tf.equal(tf.argmax(self.y, 1), tf.argmax(self.y_, 1))
 		accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-		for i in range(1000):
-			batch = mnist.train.next_batch(100)
-			train_step.run(feed_dict={x: batch[0], y_: batch[1]})
-			if i%100==0:
-				print("Accuracy after iter : ", i, accuracy.eval(feed_dict={x: mnist.test.images, y_: mnist.test.labels}))
+
+		for i in range(n_epochs):
+			batch_xs, batch_ys = dataset.train.next_batch(batch_size)
+			if i % 100 == 0:
+				train_accuracy = accuracy.eval(feed_dict={
+									self.X: batch_xs, self.y_: batch_ys})
+				print("step %d, training accuracy %g" % (i, train_accuracy))
+			session.run(train_step, feed_dict={self.X: batch_xs, self.y_: batch_ys})
+
+		print("test accuracy %g" % accuracy.eval(feed_dict={
+					self.X: dataset.test.images, self.y_: dataset.test.labels}))
 
 	def predict(self):
 		pass
