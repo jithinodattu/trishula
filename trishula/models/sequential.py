@@ -45,18 +45,13 @@ class Sequential(Model):
 		for i in range(n_epochs):
 			batch_xs, batch_ys = dataset.train.next_batch(batch_size)
 			if i % 100 == 0:
-				print i
-				# train_accuracy = accuracy.eval(feed_dict={
-				# 					self.X: batch_xs, self.y_: batch_ys})
-				# print("step %d, training accuracy %g" % (i, train_accuracy))
+				train_accuracy = accuracy.eval(feed_dict={
+									self.X: batch_xs, self.y_: batch_ys})
+				print("step %d, training accuracy %g" % (i, train_accuracy))
 			session.run(train_step, feed_dict={self.X: batch_xs, self.y_: batch_ys})
 
-		correct_prediction = tf.equal(tf.argmax(self.y, 1), tf.argmax(self.y_, 1))
-
-		accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-
-		print(session.run(accuracy, feed_dict={self.X: dataset.test.images,
-		    							self.y_: dataset.test.labels}))
+		print("test accuracy %g" % accuracy.eval(feed_dict={
+					self.X: dataset.test.images, self.y_: dataset.test.labels}))
 
 	def predict(self):
 		pass
