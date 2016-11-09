@@ -1,4 +1,5 @@
 
+import tensorflow as tf
 from trishula.abstracts import Model
 from trishula.abstracts import Layer 
 
@@ -28,8 +29,6 @@ class Sequential(Model):
 			train_step.run(feed_dict={x: batch[0], y_: batch[1]})
 			if i%100==0:
 				print("Accuracy after iter : ", i, accuracy.eval(feed_dict={x: mnist.test.images, y_: mnist.test.labels}))
-
-
 
 	def predict(self):
 		pass
