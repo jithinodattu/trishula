@@ -14,7 +14,7 @@ class Sequential(Model):
 
 	def _connect_layers(self):
 		assert len(self.layers) != 0, "There is no layer in the model"
-		layer_input = self.X 
+		layer_input = self.X
 		for layer in self.layers:
 			layer_output = layer.feedforward(layer_input)
 			layer_input = layer_output
@@ -25,22 +25,30 @@ class Sequential(Model):
 		error,
 		learning_rate=0.50, 
 		n_epochs=1000, 
-		batch_size=100):
+		batch_size=50):
 
-		self.X = tf.placeholder(tf.float32, name='X')
-		self.y_ = tf.placeholder(tf.float32, name='y_')
+		self.X = tf.placeholder(tf.float32, shape=[None, 784], name='X')
+		self.y_ = tf.placeholder(tf.float32, shape=[None, 10], name='y_')
 
 		self._connect_layers()
 
 		error = error(self.y, self.y_)
 
-		train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(error)
+		train_step = tf.train.AdamOptimizer(1e-4).minimize(error)
 
 		session = tf.InteractiveSession()
 		tf.initialize_all_variables().run()
 
-		for _ in range(n_epochs):
+		correct_prediction = tf.equal(tf.argmax(self.y, 1), tf.argmax(self.y_, 1))
+		accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+		for i in range(n_epochs):
 			batch_xs, batch_ys = dataset.train.next_batch(batch_size)
+			if i % 100 == 0:
+				print i
+				# train_accuracy = accuracy.eval(feed_dict={
+				# 					self.X: batch_xs, self.y_: batch_ys})
+				# print("step %d, training accuracy %g" % (i, train_accuracy))
 			session.run(train_step, feed_dict={self.X: batch_xs, self.y_: batch_ys})
 
 		correct_prediction = tf.equal(tf.argmax(self.y, 1), tf.argmax(self.y_, 1))
