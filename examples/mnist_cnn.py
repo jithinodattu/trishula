@@ -1,7 +1,6 @@
 
-import tensorflow as tf
 from trishula.models import Sequential
-from trishula.layers import DenseLayer, SoftmaxLayer, Convolution2DLayer, MaxPooling2DLayer, FlattenLayer
+from trishula.layers import *
 
 from trishula.utils import error_functions
 from trishula.utils import activation_functions
@@ -58,6 +57,8 @@ model.add(
 		)
 	)
 
+model.add(DropOutLayer(0.5))
+
 model.add(
 	DenseLayer(
 		shape=(1024, 10), 
@@ -70,5 +71,6 @@ model.add(SoftmaxLayer())
 model.optimize(
 	dataset=mnist_data,
 	error=cross_entropy,
-	learning_rate=0.5
+	learning_rate=0.5,
+	batch_size=batch_size
 	)

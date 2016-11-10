@@ -15,7 +15,7 @@ class Convolution2DLayer(Layer):
 			b_initializer=weight_initializers.constant, 
 			activ_fn=None):
 		self.W = w_initializer(self.__class__.__name__+'_'+str(id(self))+'_W', filter_shape)
-		self.b = w_initializer(self.__class__.__name__+'_'+str(id(self))+'_b', filter_shape[-1:])
+		self.b = b_initializer(self.__class__.__name__+'_'+str(id(self))+'_b', filter_shape[-1:])
 
 		self.input_shape = [-1] + list(input_shape[1:])
 		self.activ_fn = activ_fn
@@ -25,9 +25,7 @@ class Convolution2DLayer(Layer):
 		self.params = [self.W, self.b]
 
 	def feedforward(self, input):
-		print 'conv-input', input.get_shape()
 		input = tf.reshape(input, self.input_shape)
-		print 'conv', input.get_shape()
 		pre_activation = tf.nn.conv2d(
 						input, 
 						self.W, 
