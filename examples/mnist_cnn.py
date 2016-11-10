@@ -8,7 +8,7 @@ from trishula.datasets import mnist
 
 mnist_data = mnist.load_data('../data/')
 
-cross_entropy = error_functions.cross_entropy
+softmax_cross_entropy = error_functions.softmax_cross_entropy
 relu = activation_functions.relu
 
 n_kerns= [32, 64]
@@ -57,20 +57,17 @@ model.add(
 		)
 	)
 
-model.add(DropOutLayer(0.5))
+model.add(DropOutLayer(9.0))
 
 model.add(
 	DenseLayer(
-		shape=(1024, 10), 
-		activ_fn=relu
+		shape=(1024, 10)
 		)
 	)
 
-model.add(SoftmaxLayer())
-
 model.optimize(
 	dataset=mnist_data,
-	error=cross_entropy,
+	error=softmax_cross_entropy,
 	learning_rate=0.5,
 	batch_size=batch_size
 	)

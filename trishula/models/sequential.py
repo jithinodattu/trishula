@@ -51,7 +51,7 @@ class Sequential(Model):
 			session.run(train_step, feed_dict={self.X: batch_xs, self.y_: batch_ys})
 
 		print("test accuracy %g" % session.run(accuracy, feed_dict={
-					self.X: dataset.test.images, self.y_: dataset.test.labels}))
+					self.X: dataset.test.images[:50], self.y_: dataset.test.labels[:50]}))
 
 	def predict(self):
 		pass
