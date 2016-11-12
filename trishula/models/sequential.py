@@ -7,6 +7,7 @@ class Sequential(Model):
 
 	def __init__(self):
 		self.layers = []
+		self.session = tf.Session()
 
 	def add(self, layer):
 		assert issubclass(type(layer) , Layer), "This layer is not a subclass of trishula.abstracts.Layer"
@@ -20,24 +21,26 @@ class Sequential(Model):
 			layer_input = layer_output
 		self.y = layer_output
 
+	def _execute(self, graph, feed_dict=None):
+		return self.session.run(graph, feed_dict=feed_dict)
+
 	def optimize(self, 
 		dataset, 
 		error,
-		learning_rate=0.50, 
+		learning_rate=1e-4, 
 		n_epochs=2000, 
 		batch_size=50):
 
-		self.X = tf.placeholder(tf.float32, shape=[None, 784], name='X')
-		self.y_ = tf.placeholder(tf.float32, shape=[None, 10], name='y_')
+		self.X = tf.placeholder(tf.float32, name='X')
+		self.y_ = tf.placeholder(tf.float32, name='y_')
 
 		self._connect_layers()
 
 		error = error(self.y, self.y_)
 
-		train_step = tf.train.AdamOptimizer(1e-4).minimize(error)
+		train_step = tf.train.AdamOptimizer(learning_rate).minimize(error)
 
-		session = tf.Session()
-		session.run(tf.initialize_all_variables())
+		self._execute(tf.initialize_all_variables())
 
 		correct_prediction = tf.equal(tf.argmax(self.y, 1), tf.argmax(self.y_, 1))
 		accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
@@ -45,13 +48,21 @@ class Sequential(Model):
 		for i in range(n_epochs):
 			batch_xs, batch_ys = dataset.train.next_batch(batch_size)
 			if i % 100 == 0:
-				train_accuracy = session.run(accuracy, feed_dict={
-									self.X: batch_xs, self.y_: batch_ys})
+				train_accuracy = self._execute(
+										accuracy, 
+										feed_dict={self.X: batch_xs, self.y_: batch_ys}
+									)
 				print("step %d, training accuracy %g" % (i, train_accuracy))
-			session.run(train_step, feed_dict={self.X: batch_xs, self.y_: batch_ys})
+			self._execute(train_step, feed_dict={self.X: batch_xs, self.y_: batch_ys})
 
-		print("test accuracy %g" % session.run(accuracy, feed_dict={
-					self.X: dataset.test.images[:50], self.y_: dataset.test.labels[:50]}))
+		test_accuracy = self._execute(
+								accuracy, 
+								feed_dict={
+										self.X: dataset.test.images, 
+										self.y_: dataset.test.labels
+									}
+							)
+		print("test accuracy %g" % test_accuracy)
 
 	def predict(self):
 		pass

@@ -73,6 +73,6 @@ model.add(SoftmaxLayer())
 model.optimize(
 	dataset=mnist_data,
 	error=cross_entropy,
-	learning_rate=0.5,
+	learning_rate=1e-4,
 	batch_size=batch_size
 	)
