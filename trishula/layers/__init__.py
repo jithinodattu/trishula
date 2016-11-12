@@ -5,3 +5,4 @@ from .convolution_layer import Convolution2DLayer
 from .pooling_layer import MaxPooling2DLayer
 from .flatten_layer import FlattenLayer
 from .dropout_layer import DropOutLayer
+from .activation_layer import ActivationLayer
