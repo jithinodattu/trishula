@@ -24,7 +24,7 @@ class Sequential(Model):
 		dataset, 
 		error,
 		learning_rate=0.50, 
-		n_epochs=1000, 
+		n_epochs=2000, 
 		batch_size=50):
 
 		self.X = tf.placeholder(tf.float32, shape=[None, 784], name='X')
