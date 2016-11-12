@@ -20,8 +20,7 @@ model.add(
 	Convolution2DLayer(
 		filter_shape=(5,5,1,n_kerns[0]),
 		input_shape=(batch_size,28,28,1),
-		strides=1,
-		activ_fn=relu
+		strides=1
 		)
 	)
 
@@ -31,13 +30,14 @@ model.add(
 		strides=2
 		)
 	)
+
+model.add(ActivationLayer(relu))
 
 model.add(
 	Convolution2DLayer(
 		filter_shape=(5,5,n_kerns[0],n_kerns[1]),
 		input_shape=(batch_size,14,14,n_kerns[0]),
-		strides=1,
-		activ_fn=relu
+		strides=1
 		)
 	)
 
@@ -48,16 +48,19 @@ model.add(
 		)
 	)
 
+model.add(ActivationLayer(relu))
+
 model.add(FlattenLayer())
 
 model.add(
 	DenseLayer(
-		shape=(7*7*64,1024), 
-		activ_fn=relu
+		shape=(7*7*64,1024)
 		)
 	)
 
 model.add(DropOutLayer(9.0))
+
+model.add(ActivationLayer(relu))
 
 model.add(
 	DenseLayer(

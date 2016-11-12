@@ -15,10 +15,11 @@ model = Sequential()
 
 model.add(
 	DenseLayer(
-		shape=(28*28,1024), 
-		activ_fn=relu
+		shape=(28*28,1024)
 		)
 	)
+
+model.add(ActivationLayer(relu))
 
 model.add(
 	DenseLayer(
