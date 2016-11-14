@@ -11,8 +11,6 @@ mnist_data = mnist.load_data('../data/')
 input_dim  = 28*28
 output_dim = 10
 
-cross_entropy = error_functions.cross_entropy
-
 model = Sequential()
 
 model.add(
