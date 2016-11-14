@@ -1,6 +1,7 @@
 
 from trishula.models import Sequential
-from trishula.layers import DenseLayer, SoftmaxLayer
+from trishula.optimizers import GradientDescentOptimizer
+from trishula.layers import *
 
 from trishula.utils import error_functions
 from trishula.utils import weight_initializers
@@ -13,6 +14,7 @@ output_dim = 10
 cross_entropy = error_functions.cross_entropy
 
 model = Sequential()
+
 model.add(
 	DenseLayer(
 		shape=[input_dim, output_dim],
@@ -20,10 +22,13 @@ model.add(
 		b_initializer=weight_initializers.zeros
 		)
 	)
+
 model.add(SoftmaxLayer())
+
+cross_entropy = error_functions.cross_entropy
+gradient_descent_optimizer = GradientDescentOptimizer(error=cross_entropy, learning_rate=0.5)
 
 model.optimize(
 	dataset=mnist_data,
-	error=cross_entropy,
-	learning_rate=0.5
+	optimizer=gradient_descent_optimizer
 	)
