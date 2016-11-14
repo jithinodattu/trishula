@@ -1,2 +1,3 @@
 
 from .adam_optimizer import AdamOptimizer
+from .gradient_descent_optimizer import GradientDescentOptimizer
