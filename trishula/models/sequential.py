@@ -3,6 +3,8 @@ import tensorflow as tf
 from trishula.abstracts import Model
 from trishula.abstracts import Layer
 
+from trishula.optimizers import AdamOptimizer
+
 class Sequential(Model):
 
 	def __init__(self):
@@ -26,8 +28,7 @@ class Sequential(Model):
 
 	def optimize(self, 
 		dataset, 
-		error,
-		learning_rate=1e-4, 
+		optimizer, 
 		n_epochs=2000, 
 		batch_size=50):
 
@@ -36,9 +37,7 @@ class Sequential(Model):
 
 		self._connect_layers()
 
-		error = error(self.y, self.y_)
-
-		train_step = tf.train.AdamOptimizer(learning_rate).minimize(error)
+		train_step = optimizer.generate_training_step(self.y, self.y_)
 
 		self._execute(tf.initialize_all_variables())
 
