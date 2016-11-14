@@ -1,5 +1,6 @@
 
 from trishula.models import Sequential
+from trishula.optimizers import AdamOptimizer
 from trishula.layers import *
 
 from trishula.utils import error_functions
@@ -8,7 +9,6 @@ from trishula.datasets import mnist
 
 mnist_data = mnist.load_data('../data/')
 
-cross_entropy = error_functions.cross_entropy
 relu = activation_functions.relu
 
 n_kerns= [32, 64]
@@ -70,9 +70,11 @@ model.add(
 
 model.add(SoftmaxLayer())
 
+cross_entropy = error_functions.cross_entropy
+adam_optimizer = AdamOptimizer(error=cross_entropy, learning_rate=1e-4)
+
 model.optimize(
 	dataset=mnist_data,
-	error=cross_entropy,
-	learning_rate=1e-4,
+	optimizer=adam_optimizer,
 	batch_size=batch_size
 	)
