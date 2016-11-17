@@ -70,17 +70,12 @@ model.add(ActivationLayer(relu))
 
 model.add(
 	DenseLayer(
-		shape=(4096,4096)
+		shape=(4096,10)
 		)
 	)
 
-model.add(
-	SoftmaxLayer(
-		)
-	)
-
-cross_entropy = error_functions.cross_entropy
-adam_optimizer = AdamOptimizer(error=cross_entropy, learning_rate=1e-4)
+sparse_softmax_cross_entropy = error_functions.sparse_softmax_cross_entropy
+adam_optimizer = AdamOptimizer(error=sparse_softmax_cross_entropy, learning_rate=1e-4)
 
 model.optimize(
 	dataset=cifar10_data,
