@@ -55,6 +55,8 @@ def read_cifar10(filename_queue):
 	result.label = tf.cast(
 	tf.slice(record_bytes, [0], [label_bytes]), tf.int32)
 
+	result.label = tf.one_hot(result.label, 10, 1, 0, -1)
+
 	depth_major = tf.reshape(tf.slice(record_bytes, [label_bytes], [image_bytes]),
 	[result.depth, result.height, result.width])
 
@@ -81,7 +83,7 @@ def _generate_image_and_label_batch(image, label, min_queue_examples,
 									capacity=min_queue_examples + 3 * batch_size
 									)
 
-	return images, tf.reshape(label_batch, [batch_size])
+	return images, tf.reshape(label_batch, [batch_size, 10])
 
 def load_data(dirname, one_hot=True):
 	if not os.path.exists(dirname):
