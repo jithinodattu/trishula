@@ -35,6 +35,16 @@ class Sequential(Model):
 		self.X = tf.placeholder(tf.float32, name='X')
 		self.y_ = tf.placeholder(tf.float32, name='y_')
 
+
+		# train_step = optimizer.generate_training_step(self.y, self.y_)
+
+		# self._execute(tf.initialize_all_variables())
+
+		# correct_prediction = tf.equal(tf.argmax(self.y, 1), tf.argmax(self.y_, 1))
+		# accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+		self.X, self.y_ = dataset.train.next_batch(batch_size)
+
 		self._connect_layers()
 
 		train_step = optimizer.generate_training_step(self.y, self.y_)
@@ -44,23 +54,29 @@ class Sequential(Model):
 		correct_prediction = tf.equal(tf.argmax(self.y, 1), tf.argmax(self.y_, 1))
 		accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-		for i in range(n_epochs):
-			batch_xs, batch_ys = dataset.train.next_batch(batch_size)
-			if i % 100 == 0:
-				train_accuracy = self._execute(
-										accuracy, 
-										feed_dict={self.X: batch_xs, self.y_: batch_ys}
-									)
-				print("step %d, training accuracy %g" % (i, train_accuracy))
-			self._execute(train_step, feed_dict={self.X: batch_xs, self.y_: batch_ys})
+		tf.train.start_queue_runners(sess=self.session)
 
-		test_accuracy = self._execute(
-								accuracy, 
-								feed_dict={
-										self.X: dataset.test.images, 
-										self.y_: dataset.test.labels
-									}
-							)
+		for i in range(n_epochs):
+			# batch_xs, batch_ys = dataset.train.next_batch(batch_size)
+
+			if i % 100 == 0:
+				# train_accuracy = self._execute(
+				# 						accuracy, 
+				# 						feed_dict={self.X: batch_xs, self.y_: batch_ys}
+				# 					)
+				train_accuracy = self._execute(accuracy)
+				print("step %d, training accuracy %g" % (i, train_accuracy))
+			# self._execute(train_step, feed_dict={self.X: batch_xs, self.y_: batch_ys})
+			self._execute(train_step)
+
+		# test_accuracy = self._execute(
+		# 						accuracy, 
+		# 						feed_dict={
+		# 								self.X: dataset.test.images, 
+		# 								self.y_: dataset.test.labels
+		# 							}
+		# 					)
+		test_accuracy = self._execute(accuracy)
 		print("test accuracy %g" % test_accuracy)
 
 	def predict(self):
