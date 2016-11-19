@@ -110,7 +110,7 @@ def load_data(dirname, one_hot=True):
 	distorted_image = tf.image.random_contrast(distorted_image,
 	                             						lower=0.2, upper=1.8)
 
-	# std_image = tf.image.per_image_standardization(distorted_image)
+	std_image = tf.image.per_image_whitening(distorted_image)
 
 	min_fraction_of_examples_in_queue = 0.4
 	min_queue_examples = int(NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN * min_fraction_of_examples_in_queue)
