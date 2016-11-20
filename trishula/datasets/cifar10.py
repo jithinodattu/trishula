@@ -52,8 +52,7 @@ def read_cifar10(filename_queue):
 
 	record_bytes = tf.decode_raw(value, tf.uint8)
 
-	result.label = tf.cast(
-	tf.slice(record_bytes, [0], [label_bytes]), tf.int32)
+	result.label = tf.cast(tf.slice(record_bytes, [0], [label_bytes]), tf.int32)
 
 	result.label = tf.one_hot(result.label, 10, 1, 0, -1)
 
@@ -85,16 +84,7 @@ def _generate_image_and_label_batch(image, label, min_queue_examples,
 
 	return images, tf.reshape(label_batch, [batch_size, 10])
 
-def load_data(dirname, one_hot=True):
-	if not os.path.exists(dirname):
-		os.makedirs(dirname)
-	filename = URL.split('/')[-1]
-	filepath = os.path.join(dirname, filename)
-	if not os.path.exists(filepath):
-		download(URL, filename, filepath)
-	tarfile.open(filepath, 'r:gz').extractall(dirname)
-	data_dir = os.path.join(dirname, 'cifar-10-batches-bin')
-
+def generate_next_batch(data_dir, fileblob):
 	fileblob = os.path.join(data_dir, 'data_batch_*.bin')
 	filenames = tf.train.match_filenames_once(fileblob)
 
@@ -104,24 +94,33 @@ def load_data(dirname, one_hot=True):
 	float32_image = tf.cast(read_input.uint8image, tf.float32)
 
 	distorted_image = tf.image.random_flip_left_right(float32_image)
-
-	distorted_image = tf.image.random_brightness(distorted_image,
-	                               						max_delta=63)
-	distorted_image = tf.image.random_contrast(distorted_image,
-	                             						lower=0.2, upper=1.8)
-
+	distorted_image = tf.image.random_brightness(distorted_image, max_delta=63)
+	distorted_image = tf.image.random_contrast(distorted_image, lower=0.2, upper=1.8)
 	std_image = tf.image.per_image_whitening(distorted_image)
 
 	min_fraction_of_examples_in_queue = 0.4
 	min_queue_examples = int(NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN * min_fraction_of_examples_in_queue)
-	print ('Filling queue with %d CIFAR images before starting to train. '
-	     				'This will take a few minutes.' % min_queue_examples)
 
 	def next_batch(batch_size):
-		return _generate_image_and_label_batch(distorted_image, read_input.label,
+		return _generate_image_and_label_batch(std_image, read_input.label,
 	                                     min_queue_examples, batch_size,
 	                                     shuffle=True)
+	return next_batch
+
+def load_data(dirname, one_hot=True):
+	if not os.path.exists(dirname):
+		os.makedirs(dirname)
+	filename = URL.split('/')[-1]
+	filepath = os.path.join(dirname, filename)
+	if not os.path.exists(filepath):
+		download(URL, filename, filepath)
+	tarfile.open(filepath, 'r:gz').extractall(dirname)
+	data_dir = os.path.join(dirname, 'cifar-10-batches-bin')
+	
 	cifar10 = Cifar10()
-	cifar10.train.next_batch = next_batch
+	train_file_blob = os.path.join(data_dir, 'data_batch_*.bin')
+	cifar10.train.next_batch = generate_next_batch(data_dir, train_file_blob)
+	test_file_blob = os.path.join(data_dir, 'test_batch*.bin')
+	cifar10.test.next_batch = generate_next_batch(data_dir, test_file_blob)
 
 	return cifar10
