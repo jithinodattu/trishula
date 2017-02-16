@@ -1,13 +1,39 @@
 
-from abc import ABCMeta, abstractmethod
+""" 
+-- Abstract class for creating dataset -- 
+
+Properties
+  - train
+  - dev
+  - test
+
+Dataset is expected to be called as 
+  - dataset.train.next_batch()
+  - dataset.dev.next_batch()
+  - dataset.test.next_batch()
+these methods should return graph for fetching batch
+"""
+
+from abc import ABCMeta, abstractproperty, abstractmethod
 
 class Dataset(object):
-	__metaclass__ = ABCMeta
+  __metaclass__ = ABCMeta
 
-	@abstractmethod
-	def __init__(self):
-		pass
+  def __init__(self, name):
+    pass
 
-	@abstractmethod
-	def read_data_sets(self, dirnam, one_hot):
-		pass 
+  @abstractmethod
+  def num_classes(self):
+    pass
+
+  @abstractproperty
+  def train(self):
+    pass
+
+  @abstractproperty
+  def dev(self):
+    pass
+
+  @abstractproperty
+  def test(self):
+    pass
