@@ -103,13 +103,13 @@ def write_tfrecords(image, label,dirpath):
   for i in xrange(NO_EXAMPLES):
     image_data, label_data = session.run([image, label])
     img_str = image_data.tostring()
-    label_str = label_data.tostring()
+    label_str = label_data[0]
     example = tf.train.Example(features=tf.train.Features(feature={
         'height': _int64_feature(IMAGE_HEIGHT),
         'width': _int64_feature(IMAGE_WIDTH),
         'depth': _int64_feature(IMAGE_DEPTH),
         'image': _bytes_feature(img_str),
-        'label': _bytes_feature(label_str)
+        'label': _int64_feature(label_str)
         }))
     tfrecord_writer.write(example.SerializeToString())
   tfrecord_writer.close()
