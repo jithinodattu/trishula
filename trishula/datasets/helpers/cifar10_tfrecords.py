@@ -21,12 +21,16 @@ Records are then write back to disk as TFRecords with features
 
 """
 from __future__ import print_function
+from __future__ import division
 
 import os
 import sys
 import tarfile
-from six.moves import urllib
+import glob
+import logging
+import numpy as np
 import tensorflow as tf
+from six.moves import urllib
 
 DATA_URL     = 'http://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz'
 LABEL_SIZE   = 1
@@ -34,10 +38,13 @@ IMAGE_HEIGHT = 32
 IMAGE_WIDTH  = 32
 IMAGE_DEPTH  = 3
 IMAGE_SIZE   = IMAGE_HEIGHT*IMAGE_WIDTH*IMAGE_DEPTH
+SAMPLE_SIZE  = IMAGE_SIZE + LABEL_SIZE
+SAMPLES_PER_BIN_FILE = 10000
 
-NO_TRAIN_EXAMPLES = 50000
-NO_TEST_EXAMPLES = 10000
-NO_EXAMPLES = NO_TRAIN_EXAMPLES + NO_TEST_EXAMPLES
+TFRECORDS_FILENAME = 'cifar10.tfrecords'
+
+logging.basicConfig(level=logging.DEBUG)
+LOGGER = logging.getLogger('TRISHULA')
 
 def download_and_extract(dirpath):
   filename = DATA_URL.split('/')[-1]
@@ -45,44 +52,18 @@ def download_and_extract(dirpath):
   if not tf.gfile.Exists(dirpath):
     tf.gfile.MakeDirs(dirpath)
   if not tf.gfile.Exists(filepath):
-    print("Downloading dataset from ", DATA_URL)
+    LOGGER.info("Downloading dataset from %s"%DATA_URL)
     def _progress(count, block_size, total_size):
       num_blocks = total_size/block_size
       percentage_completed = (count/num_blocks)*100
-      progress_blocks = int(percentage_completed)
-      sys.stdout.write('\r|' 
-                       + '='*progress_blocks 
-                       + '>' 
-                       + ' '*(100-progress_blocks) 
-                       + '|'
-                       + ' %.1f%% completed'%(percentage_completed))
+      sys.stdout.write('\rDownloading : %.1f%% completed'%(percentage_completed))
       sys.stdout.flush()
-    filepath, _ = urllib.request.urlretrieve(URL, filepath, _progress)
-  print("Extracting ", filename, "into directory -", dirpath)
+    filepath, _ = urllib.request.urlretrieve(DATA_URL, filepath, _progress)
+  LOGGER.info("Extracting %s into directory - %s"%(filename, dirpath))
   archive = tarfile.open(filepath, 'r:gz')
   archive.extractall(dirpath)
   extracted_subdir = os.path.commonprefix(archive.getnames())
   return os.path.join(dirpath, extracted_subdir)
-
-def filename_queue(data_dir):
-  filenames = tf.train.match_filenames_once(os.path.join(data_dir, '*.bin'))
-  return tf.train.string_input_producer(filenames)
-
-def training_data_reader():
-  record_size = LABEL_SIZE + IMAGE_SIZE
-  return tf.FixedLengthRecordReader(record_size)
-
-def split_image_and_label_from_record(record_bytes):
-  label = tf.cast(tf.slice(record_bytes, [0], [LABEL_SIZE]), tf.int32)
-  image = tf.cast(tf.slice(record_bytes, [LABEL_SIZE], [IMAGE_SIZE]), tf.int32)
-  image = tf.reshape(image, [IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_DEPTH])
-  image = tf.transpose(image, [1,2,0])
-  return image, label
-
-def read_record(reader, input_queue):
-  _, value = reader.read(input_queue)
-  record_bytes = tf.decode_raw(value, tf.uint8)
-  return record_bytes
 
 def _bytes_feature(value):
   return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
@@ -90,40 +71,45 @@ def _bytes_feature(value):
 def _int64_feature(value):
   return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
-def write_tfrecords(image, label,dirpath):
-  tfrecords_dir = os.path.join(dirpath, 'cifar10-tfrecords')
-  if not tf.gfile.Exists(tfrecords_dir):
-    tf.gfile.MakeDirs(tfrecords_dir)
-  tfrecords_filename = os.path.join(tfrecords_dir, 'cifar10.tfrecords')
-  tfrecord_writer = tf.python_io.TFRecordWriter(tfrecords_filename)
-  session = tf.Session()
-  session.run(tf.global_variables_initializer())
-  coord = tf.train.Coordinator()
-  tf.train.start_queue_runners(coord=coord, sess=session)
-  for i in xrange(NO_EXAMPLES):
-    image_data, label_data = session.run([image, label])
-    img_str = image_data.tostring()
-    label_str = label_data[0]
-    example = tf.train.Example(features=tf.train.Features(feature={
-        'height': _int64_feature(IMAGE_HEIGHT),
-        'width': _int64_feature(IMAGE_WIDTH),
-        'depth': _int64_feature(IMAGE_DEPTH),
-        'image': _bytes_feature(img_str),
-        'label': _int64_feature(label_str)
-        }))
-    tfrecord_writer.write(example.SerializeToString())
+def read_binarydata_filenames(data_dir):
+  return glob.glob(os.path.join(data_dir, '*.bin'))
+
+def split_format_image_and_label(record):
+  uint8_label = record[:1]
+  uint8_image = record[1:]
+  label = uint8_label.astype(np.int64)
+  float32_image = uint8_image.astype(np.float32)
+  image = np.reshape(float32_image, [IMAGE_DEPTH, IMAGE_HEIGHT, IMAGE_WIDTH])
+  image = np.transpose(image, [1, 2, 0])
+  return image, label
+
+def create_example(image, label):
+  image_str = image.tostring()
+  label_str = label.tostring()
+  return tf.train.Example(features=tf.train.Features(feature={
+    'height': _int64_feature(IMAGE_HEIGHT),
+    'width': _int64_feature(IMAGE_WIDTH),
+    'depth': _int64_feature(IMAGE_DEPTH),
+    'image': _bytes_feature(image_str),
+    'label': _bytes_feature(label_str)
+    }))
+
+def write_tfrecords(binary_filenames, dirpath):
+  tfrecord_path = os.path.join(dirpath, TFRECORDS_FILENAME)
+  tfrecord_writer = tf.python_io.TFRecordWriter(tfrecord_path)
+  LOGGER.info("Writing tfrecords")
+  for filename in binary_filenames:
+    binarystream = open(filename, 'rb')
+    raw_data = binarystream.read()
+    np_data = np.frombuffer(raw_data, np.uint8)
+    uint8_records = np.reshape(np_data, [SAMPLES_PER_BIN_FILE, SAMPLE_SIZE])
+    for record in uint8_records:
+      image, label = split_format_image_and_label(record)
+      example = create_example(image, label)
+      tfrecord_writer.write(example.SerializeToString())
   tfrecord_writer.close()
 
-def generate_cifar10_TFRecords(dirpath):
-  data_dir = download_and_extract(dirpath)
-  input_queue = filename_queue(data_dir)
-  reader = training_data_reader()
-  record_bytes = read_record(reader, input_queue)
-  image, label = split_image_and_label_from_record(record_bytes)
-  write_tfrecords(image, label, dirpath)
-
-def main(_):
-  generate_cifar10_TFRecords('../../../data/')
-
-if __name__ == "__main__":
-  tf.app.run()
+def generate_cifar10_TFRecords(dirpath, download_dir='/tmp'):
+  data_dir = download_and_extract(download_dir)
+  binary_filenames = read_binarydata_filenames(data_dir)
+  write_tfrecords(binary_filenames, dirpath)
