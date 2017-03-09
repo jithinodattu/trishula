@@ -59,7 +59,7 @@ def download_and_extract(dirpath):
       sys.stdout.write('\rDownloading : %.1f%% completed'%(percentage_completed))
       sys.stdout.flush()
     filepath, _ = urllib.request.urlretrieve(DATA_URL, filepath, _progress)
-  LOGGER.info("Extracting %s into directory - %s"%(filename, dirpath))
+  LOGGER.info("\rExtracting %s into directory - %s"%(filename, dirpath))
   archive = tarfile.open(filepath, 'r:gz')
   archive.extractall(dirpath)
   extracted_subdir = os.path.commonprefix(archive.getnames())
@@ -112,7 +112,7 @@ def partition_and_save(name, data_dir, filename_pattern, destination_dir):
   records_dir = os.path.join(destination_dir, name)
   tf.gfile.MakeDirs(records_dir)
   binaryfiles = read_binarydata_filenames(data_dir, filename_pattern)
-  LOGGER.info("Writing %s tfrecords into %s"%(name, records_dir))
+  LOGGER.info("\rWriting %s tfrecords into %s"%(name, records_dir))
   write_tfrecords(binaryfiles, records_dir)
 
 def generate_cifar10_TFRecords(destination_dir, download_dir='/tmp'):
