@@ -33,9 +33,9 @@ class Sequential(Model):
 		batch_size=50):
 
 		self.X = tf.placeholder(tf.float32, name='X')
-		self.y_ = tf.placeholder(tf.float32, name='y_')
+		self.y_ = tf.placeholder(tf.int32, name='y_')
 
-		self.X, self.y_ = dataset.train.next_batch(batch_size)
+		self.X, self.y_ = dataset.train.next_batch
 
 		self._connect_layers()
 
