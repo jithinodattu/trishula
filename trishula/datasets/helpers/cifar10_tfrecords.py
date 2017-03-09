@@ -71,8 +71,8 @@ def _bytes_feature(value):
 def _int64_feature(value):
   return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
-def read_binarydata_filenames(data_dir):
-  return glob.glob(os.path.join(data_dir, '*.bin'))
+def read_binarydata_filenames(data_dir, name_pattern):
+  return glob.glob(os.path.join(data_dir, name_pattern))
 
 def split_format_image_and_label(record):
   uint8_label = record[:1]
@@ -97,7 +97,6 @@ def create_example(image, label):
 def write_tfrecords(binary_filenames, dirpath):
   tfrecord_path = os.path.join(dirpath, TFRECORDS_FILENAME)
   tfrecord_writer = tf.python_io.TFRecordWriter(tfrecord_path)
-  LOGGER.info("Writing tfrecords")
   for filename in binary_filenames:
     binarystream = open(filename, 'rb')
     raw_data = binarystream.read()
@@ -109,7 +108,18 @@ def write_tfrecords(binary_filenames, dirpath):
       tfrecord_writer.write(example.SerializeToString())
   tfrecord_writer.close()
 
-def generate_cifar10_TFRecords(dirpath, download_dir='/tmp'):
-  data_dir = download_and_extract(download_dir)
-  binary_filenames = read_binarydata_filenames(data_dir)
-  write_tfrecords(binary_filenames, dirpath)
+def partition_and_save(name, data_dir, filename_pattern, destination_dir):
+  records_dir = os.path.join(destination_dir, name)
+  tf.gfile.MakeDirs(records_dir)
+  binaryfiles = read_binarydata_filenames(data_dir, filename_pattern)
+  LOGGER.info("Writing %s tfrecords into %s"%(name, records_dir))
+  write_tfrecords(binaryfiles, records_dir)
+
+def generate_cifar10_TFRecords(destination_dir, download_dir='/tmp'):
+  extracted_dir = download_and_extract(download_dir)
+  #generate train set
+  partition_and_save('train', extracted_dir, 'data*[1-4].bin', destination_dir)
+  #generate dev set
+  partition_and_save('dev', extracted_dir, 'data*5.bin', destination_dir)
+  #generate test set
+  partition_and_save('test', extracted_dir, 'test*.bin', destination_dir)
