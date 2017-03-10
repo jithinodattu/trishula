@@ -78,8 +78,8 @@ def split_format_image_and_label(record):
   uint8_label = record[:1]
   uint8_image = record[1:]
   label = uint8_label.astype(np.int64)
-  float32_image = uint8_image.astype(np.float32)
-  image = np.reshape(float32_image, [IMAGE_DEPTH, IMAGE_HEIGHT, IMAGE_WIDTH])
+  int64_image = uint8_image.astype(np.int64)
+  image = np.reshape(int64_image, [IMAGE_DEPTH, IMAGE_HEIGHT, IMAGE_WIDTH])
   image = np.transpose(image, [1, 2, 0])
   return image, label
 

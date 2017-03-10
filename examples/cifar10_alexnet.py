@@ -6,7 +6,7 @@ from trishula.layers import *
 from trishula import relu, softmax_cross_entropy
 from trishula.datasets import cifar10
 
-BATCH_SIZE=100
+BATCH_SIZE=10
 
 model = Sequential()
 

@@ -18,7 +18,7 @@ def read_tfrecords(TFRecord_dirpath):
                                     'height': tf.FixedLenFeature([], tf.int64),
                                     'width': tf.FixedLenFeature([], tf.int64),
                                     'depth': tf.FixedLenFeature([], tf.int64),
-                                    'image': tf.FixedLenFeature([], tf.float32),
+                                    'image': tf.FixedLenFeature([], tf.int64),
                                     'label': tf.FixedLenFeature([], tf.int64) 
                                    })
   image = features['image']
@@ -29,7 +29,7 @@ def read_tfrecords(TFRecord_dirpath):
 
   images, labels = tf.train.shuffle_batch(
                                           [image, label], 
-                                          batch_size=100, 
+                                          batch_size=10, 
                                           capacity=30, 
                                           num_threads=2, 
                                           min_after_dequeue=10)
