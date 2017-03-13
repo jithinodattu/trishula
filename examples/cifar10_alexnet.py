@@ -3,7 +3,7 @@ from trishula.models import Sequential
 from trishula.optimizers import AdamOptimizer
 from trishula.layers import *
 
-from trishula import relu, softmax_cross_entropy
+from trishula import relu, sparse_softmax_cross_entropy
 from trishula.datasets import cifar10
 
 BATCH_SIZE=10
@@ -88,7 +88,7 @@ model.add(
     )
   )
 
-adam_optimizer = AdamOptimizer(error=softmax_cross_entropy, learning_rate=1e-4)
+adam_optimizer = AdamOptimizer(error=sparse_softmax_cross_entropy, learning_rate=1e-4)
 
 model.optimize(
   dataset=cifar10,

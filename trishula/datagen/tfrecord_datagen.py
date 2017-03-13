@@ -18,14 +18,18 @@ def read_tfrecords(TFRecord_dirpath):
                                     'height': tf.FixedLenFeature([], tf.int64),
                                     'width': tf.FixedLenFeature([], tf.int64),
                                     'depth': tf.FixedLenFeature([], tf.int64),
-                                    'image': tf.FixedLenFeature([], tf.int64),
+                                    'image': tf.FixedLenFeature([], tf.string),
                                     'label': tf.FixedLenFeature([], tf.int64) 
                                    })
-  image = features['image']
-  height = tf.cast(features['height'], tf.int32)
-  width = tf.cast(features['width'], tf.int32)
-  depth = tf.cast(features['depth'], tf.int32)
-  label = tf.cast(features['label'], tf.int32)
+  image = tf.decode_raw(features['image'], tf.int64)
+  image = tf.cast(image, tf.float32)
+  image = tf.reshape(image, [32, 32, 3])
+  # label = tf.decode_raw(features['label'], tf.int64)
+  # label = tf.reshape(label, [1])
+  height = tf.cast(features['height'], tf.int64)
+  width = tf.cast(features['width'], tf.int64)
+  depth = tf.cast(features['depth'], tf.int64)
+  label = tf.cast(features['label'], tf.int64)
 
   images, labels = tf.train.shuffle_batch(
                                           [image, label], 
@@ -47,15 +51,15 @@ class TFRecordDataGen(DataGen):
   def __init__(self, TFRecord_dirpath):
     #pipeline for trainset
     train_partition = Partition()
-    train_dirpth = os.path.join(TFRecord_dirpath, 'train')
+    train_dirpth = os.path.join(TFRecord_dirpath, 'train/cifar10.tfrecords')
     train_partition.next_batch = read_tfrecords(train_dirpth)
     #pipeline for devset
     dev_partition = Partition()
-    dev_dirpth = os.path.join(TFRecord_dirpath, 'dev')
+    dev_dirpth = os.path.join(TFRecord_dirpath, 'dev/cifar10.tfrecords')
     dev_partition.next_batch = read_tfrecords(dev_dirpth)
     #pipeline for testset
     test_partition = Partition()
-    test_dirpth = os.path.join(TFRecord_dirpath, 'test')
+    test_dirpth = os.path.join(TFRecord_dirpath, 'test/cifar10.tfrecords')
     test_partition.next_batch = read_tfrecords(test_dirpth)
 
     self.dataset = DatasetContainer()

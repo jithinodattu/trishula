@@ -40,17 +40,16 @@ class Sequential(Model):
 
     self._connect_layers()
 
-    train_step = optimizer.generate_training_step(self.y, self.y_)
+    train_step = optimizer.generate_training_step(self.y_, self.y)
 
-    self._execute(tf.global_variables_initializer())
-
-    correct_prediction = tf.equal(tf.argmax(self.y, 1), tf.argmax(self.y_, 1))
+    correct_prediction = tf.equal(tf.argmax(self.y, 1), self.y_)
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
+    self._execute(tf.global_variables_initializer())
     tf.train.start_queue_runners(sess=self.session)
 
     for i in range(n_epochs):
-      if i % 100 == 0:
+      if i % 10 == 0:
         train_accuracy = self._execute(accuracy)
         print("step %d, training accuracy %g" % (i, train_accuracy))
       self._execute(train_step)

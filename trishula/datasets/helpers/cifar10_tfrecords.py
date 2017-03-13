@@ -75,7 +75,7 @@ def read_binarydata_filenames(data_dir, name_pattern):
   return glob.glob(os.path.join(data_dir, name_pattern))
 
 def split_format_image_and_label(record):
-  uint8_label = record[:1]
+  uint8_label = record[0]
   uint8_image = record[1:]
   label = uint8_label.astype(np.int64)
   int64_image = uint8_image.astype(np.int64)
@@ -85,13 +85,13 @@ def split_format_image_and_label(record):
 
 def create_example(image, label):
   image_str = image.tostring()
-  label_str = label.tostring()
+  # label_str = label.tostring()
   return tf.train.Example(features=tf.train.Features(feature={
     'height': _int64_feature(IMAGE_HEIGHT),
     'width': _int64_feature(IMAGE_WIDTH),
     'depth': _int64_feature(IMAGE_DEPTH),
     'image': _bytes_feature(image_str),
-    'label': _bytes_feature(label_str)
+    'label': _int64_feature(label)
     }))
 
 def write_tfrecords(binary_filenames, dirpath):
