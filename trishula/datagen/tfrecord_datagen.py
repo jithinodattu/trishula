@@ -8,7 +8,14 @@ def tfrecord_name_queue(TFRecord_dirpath):
   filenames = tf.train.match_filenames_once(TFRecord_dirpath)
   return tf.train.string_input_producer(filenames)
 
-def read_tfrecords(TFRecord_dirpath):
+def apply_distortion(image):
+  distorted_image = tf.image.random_flip_left_right(image)
+  distorted_image = tf.image.random_brightness(distorted_image, max_delta=63)
+  distorted_image = tf.image.random_contrast(distorted_image, lower=0.2, upper=1.8)
+  distorted_image = tf.image.per_image_standardization(distorted_image)
+  return distorted_image
+
+def read_tfrecords(TFRecord_dirpath, distort_image=True):
   filename_queue = tfrecord_name_queue(TFRecord_dirpath)
   reader = tf.TFRecordReader()
   _, example = reader.read(filename_queue)
@@ -19,24 +26,25 @@ def read_tfrecords(TFRecord_dirpath):
                                     'width': tf.FixedLenFeature([], tf.int64),
                                     'depth': tf.FixedLenFeature([], tf.int64),
                                     'image': tf.FixedLenFeature([], tf.string),
-                                    'label': tf.FixedLenFeature([], tf.int64) 
+                                    'label': tf.FixedLenFeature([], tf.int64)
                                    })
   image = tf.decode_raw(features['image'], tf.int64)
   image = tf.cast(image, tf.float32)
   image = tf.reshape(image, [32, 32, 3])
-  # label = tf.decode_raw(features['label'], tf.int64)
-  # label = tf.reshape(label, [1])
   height = tf.cast(features['height'], tf.int64)
   width = tf.cast(features['width'], tf.int64)
   depth = tf.cast(features['depth'], tf.int64)
   label = tf.cast(features['label'], tf.int64)
 
+  if distort_image:
+    image = apply_distortion(image)
+
   images, labels = tf.train.shuffle_batch(
                                           [image, label], 
-                                          batch_size=10, 
-                                          capacity=30, 
+                                          batch_size=100, 
+                                          capacity=300, 
                                           num_threads=2, 
-                                          min_after_dequeue=10)
+                                          min_after_dequeue=100)
   return images, labels
 
 class DatasetContainer(object):
