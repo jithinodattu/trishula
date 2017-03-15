@@ -93,6 +93,7 @@ adam_optimizer = AdamOptimizer(error=sparse_softmax_cross_entropy, learning_rate
 model.optimize(
   dataset=cifar10,
   optimizer=adam_optimizer,
+  checkpoint_dir='/tmp/cifar10-output',
   n_epochs=10000,
   batch_size=BATCH_SIZE
   )
