@@ -5,8 +5,8 @@ from trishula.utils.activation_functions import relu
 
 class ActivationLayer(Layer):
 
-	def __init__(self, activ_fn=relu):
-		self.activ_fn = activ_fn
+  def __init__(self, activ_fn=relu):
+    self.activ_fn = activ_fn
 
-	def feedforward(self, input):
-		return self.activ_fn(input)
+  def feedforward(self, input):
+    return self.activ_fn(input)

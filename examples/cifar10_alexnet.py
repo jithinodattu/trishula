@@ -68,7 +68,7 @@ model.add(
     )
   )
 
-model.add(DropOutLayer(9.0))
+model.add(DropOutLayer(0.9))
 
 model.add(ActivationLayer(relu))
 

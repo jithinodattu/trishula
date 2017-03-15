@@ -4,8 +4,8 @@ from trishula.abstracts.layer import Layer
 
 class SoftmaxLayer(Layer):
 
-	def __init__(self, name='softmax'):
-		self.name = name
+  def __init__(self, name='softmax'):
+    self.name = name
 
-	def feedforward(self, input):
-		return tf.nn.softmax(input)
+  def feedforward(self, input):
+    return tf.nn.softmax(input)
